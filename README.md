@@ -3,7 +3,7 @@ Easy Setup for NordVPN using OpenVPN on Linux OS
 
 INSTALLATION:
 
-
+ 
 
 Download the bash script file, and set permissions
 
@@ -13,8 +13,8 @@ $ sudo cp /path/NordVPNSetup.sh /usr/local/bin
 
 $ sudo chmod +x /usr/local/bin  
 
-
-
+ 
+ 
 
 RUNNING:
  
@@ -62,57 +62,57 @@ options:
 
 --disable <VPNServiceName>	Disables service
 
-
+ 
 
 Be aware that -h, -l, --checkserver, -u, --updatefiles, --start, --stop, --restart, -status, --enable, and --disable options will override other options, the first of these options will be processed, the others will be ignored.
 
-
+ 
 
 Default options are:
 
 NordVPNSetup.sh -s <ServerName> [default=none] -p <PortType> [default=udp] -C <path/to/NordVPN> [default=/home/romulan/build/nordvpn] -O <path/to/OpenVPN> [default=/etc/openvpn] -f <filename> [default=]
 
-
+ 
 
 USAGE SUGGESTIONS:
 
-
+ 
 
 Setting NordVPN:
 
 NordVPNSetup.sh -s <ServerName> [default=none] -p <PortType> [default=udp] -C <path/to/NordVPN> [default=/home/romulan/build/nordvpn] -O <path/to/OpenVPN> [default=/etc/openvpn] -f <filename> [default=]
  
-
+ 
 
 For Help:
 
 NordVPNSetup.sh -h or NordVPNSetup.sh --help
 
-
+ 
 
 For Usage: (Displaying this list)
 
 NordVPNSetup.sh -u or NordVPNSetup.sh --usage
  
-
+ 
 
 For Listing Servers:
 
 NordVPNSetup.sh -l [--country <2LetterCountryCode>] [--port <PortType>]
 
-
+ 
 
 For Checking if a Server file is present in the local machine:
 
 NordVPNSetup.sh --checkserver <ServerName>
 
-
+ 
 
 For Updating Server files in the local machine:
 
 NordVPNSetup.sh --updatefiles
 
-
+ 
 
 For Client Services:
 
