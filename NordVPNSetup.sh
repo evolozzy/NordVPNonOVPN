@@ -61,7 +61,7 @@ function help {
 		echo "Be aware that -h, -l, --checkserver, -u, --updatefiles, --start, --stop, --restart, -status, --enable, and --disable options will override other options, the first of these options will be processed, the others will be ignored."
 		echo " "
 		echo "Default options are:"
-		echo "usage: $SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <filename> [default=$VPNFILENAME]"
+		echo "usage: $SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <VPNServiceName> [default=$VPNNAME]"
 }
 
 function installopenvpn {
@@ -165,7 +165,7 @@ function usage {
 	echo "Correct Usage Instructions:"
 	echo " "
 	echo "Setting NordVPN:"
-	echo "$SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <filename> [default=$VPNFILENAME]"
+	echo "$SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <VPNServiceName> [default=$VPNNAME]"
 	echo " "
 	echo "For Help:"
 	echo "$SCRIPTNAME -h or $SCRIPTNAME --help"
