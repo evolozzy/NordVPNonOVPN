@@ -7,7 +7,7 @@ INSTALLATION:
 
 Download the bash script file, and set permissions
 
-$ git clone ..
+$ git clone https://github.com/ozankiratli/NordVPNonOVPN.git
 
 $ sudo cp /path/NordVPNSetup.sh /usr/local/bin 
 
