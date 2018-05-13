@@ -3,10 +3,11 @@ Easy Setup for NordVPN using OpenVPN on Linux OS
 
 INSTALLATION:
 
-Download the bash script file, and set permissions
-$ git clone ..
-$ sudo cp /path/NordVPNSetup.sh /usr/local/bin
-$ sudo chmod +x /usr/local/bin
+Download the bash script file, and set permissions\n
+$ git clone .. \n
+$ sudo cp /path/NordVPNSetup.sh /usr/local/bin \n
+$ sudo chmod +x /usr/local/bin \n 
+
 
 
 
