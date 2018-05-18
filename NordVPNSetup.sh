@@ -61,7 +61,7 @@ function help {
 		echo "Be aware that -h, -l, --checkserver, -u, --updatefiles, --start, --stop, --restart, -status, --enable, and --disable options will override other options, the first of these options will be processed, the others will be ignored."
 		echo " "
 		echo "Default options are:"
-		echo "usage: $SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <VPNServiceName> [default=$VPNNAME]"
+		echo "usage: $SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <filename> [default=$VPNFILENAME]"
 }
 
 function installopenvpn {
@@ -122,7 +122,8 @@ function runsysctl {
 }
 
 function update {
-	while true ; do
+	while true
+	do
 		echo "This process will first backup all files in $1/backup, then overwrite all the configuration files in $1."
 		read -p "Do you want to update config files? [y/N]" yn
 		case $yn in
@@ -164,7 +165,7 @@ function usage {
 	echo "Correct Usage Instructions:"
 	echo " "
 	echo "Setting NordVPN:"
-	echo "$SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <VPNServiceName> [default=$VPNNAME]"
+	echo "$SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <filename> [default=$VPNFILENAME]"
 	echo " "
 	echo "For Help:"
 	echo "$SCRIPTNAME -h or $SCRIPTNAME --help"
@@ -312,7 +313,8 @@ case "$1" in
 					;;
 				--port)
 					shift
-					if [ -z "$1" ] ; then
+					if [ -z "$1" ]
+					then
 						echo "Port type is not specified"
 						echo "Try $SCRIPTNAME -h -l"
 						quit1
@@ -329,6 +331,7 @@ case "$1" in
 					fi
 					shift
 					;;
+
 				*)
 					echo "Wrong option try: $SCRIPTNAME -h -l"
 					quit1
@@ -341,7 +344,8 @@ case "$1" in
 		;;
 	--checkserver)
 		shift
-		if [ -z "$1" ] ; then
+		if [ -z "$1" ]
+		then
 			echo "Server name is not specified"
 			echo "Try $SCRIPTNAME -h"
 			quit1
@@ -414,15 +418,18 @@ SERVERFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
 echo "Login: $LOGINFILE"
 echo "Server: $SERVERFILE"
 
-if [ -z "$SERVERFILE" ] ; then
-	while true ; do
+if [ -z "$SERVERFILE" ]
+then
+	while true
+	do
 		read -p "Wrong server name or missing server file. Do you want to update config files? [y/N]" yn
 		case $yn in
 			[Yy]* )
 			update $NORDPATH
 			echo "Trying again!"
 				NEWFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
-				if [ -z "$SERVERFILE" ] ; then
+				if [ -z "$SERVERFILE" ]
+				then
 					echo "Still, wrong server name or missing server file!"
 					quit1
 				fi
@@ -446,7 +453,8 @@ sudo cp $SERVERFILE $OVPNPATH/tmp.conf
 sudo sed -i "/auth-user-pass/c\auth-user-pass $OVPNPATH/$LOGINFILE" $OVPNPATH/tmp.conf
 
 NULL=`grep -E "$LOGINFILE" $OVPNPATH/tmp.conf`
-if [ -z "$NULL" ] ; then
+if [ -z "$NULL" ]
+then
 	echo "Unsuccessful attempt to add login info"
 	quit1
 fi
@@ -481,10 +489,13 @@ IPCUR=`wget -qO- http://ipecho.net/plain`
 echo "Expected IP is	: $IP2BE"
 echo "Current IP is	: $IPCUR"
 
-for i in {1..3} ; do
-	for j in {1..6} ; do
+for i in {1..3}
+do
+	for j in {1..6}
+	do
 		IPCUR=`wget -qO- http://ipecho.net/plain`
-		if  [ "$IPCUR" = "$IP2BE" ] ; then
+		if  [ "$IPCUR" = "$IP2BE" ]
+		then
 			echo "IP settings are correct"
 			echo "Script successfully changed the server to $1"
 			echo "Public IP is: $IPCUR"
@@ -496,7 +507,8 @@ for i in {1..3} ; do
 	sudo systemctl restart openvpn@NordUS.service
 done
 
-if  [ "$IPCUR" != "$IP2BE" ] ; then
+if  [ "$IPCUR" != "$IP2BE" ]
+then
 	echo "IP could not be set correctly"
 	echo "Script failed to change the server to $1"
 	echo "Public IP is: $IPCUR"
