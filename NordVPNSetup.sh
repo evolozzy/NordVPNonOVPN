@@ -135,20 +135,20 @@ function downloadfiles {
 				LINKUDP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.udp1194.ovpn"
 				LINKTCP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.tcp443.ovpn"
 				wget --spider $LINKUDP -o tmp
-				EXISTS=`grep "Remote file exists" tmp
+				EXISTS=`grep "Remote file exists" tmp`
 				rm tmp
 				if [ -z "$EXISTS" ]
 				then
-					"The link for UDP config file does not exist"
+					echo "The link for UDP config file does not exist"
 				else
 					wget $LINKUDP -O $2/$1.nordvpn.com.udp1194.ovpn
 				fi
 				wget --spider $LINKTCP -o tmp
-				EXISTS=`grep "Remote file exists" tmp
+				EXISTS=`grep "Remote file exists" tmp`
 				rm tmp
 				if [ -z "$EXISTS" ]
 				then
-					"The link for TCP config file does not exist"
+					echo "The link for TCP config file does not exist"
 				else
 					wget $LINKTCP -O $2/$1.nordvpn.com.tcp443.ovpn
 				fi
