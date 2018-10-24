@@ -483,13 +483,13 @@ then
 			[Yy]* )
 			downloadfiles $SERVER $NORDPATH
 			echo "Trying again!"
-				NEWFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
-				if [ -z "$NEWFILE" ]
+				SERVERFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
+				if [ -z "$SERVERFILE" ]
 				then
 					echo "Still, wrong server name or missing server file! Trying to update all files!"
 					update $NORDPATH
-					NEWFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
-					if [ -z "$NEWFILE" ]
+					SERVERFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
+					if [ -z "$SERVERFILE" ]
 					then
 						echo "Still, wrong server name or missing server file! Trying to update all files!"
 						exit 1
