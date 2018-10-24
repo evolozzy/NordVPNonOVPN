@@ -555,16 +555,18 @@ for i in {1..3}
 do
 	for j in {1..3}
 	do
-		IPCUR=`wget -T 3 -t 1 -qO- https://api.ipify.org`
-		if  [ "$IPCUR" = "$IP2BE" ]
+		IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
+		if  [ "$IPCUR" == "$IP2BE" ]
 		then
 			echo "IP settings are correct"
 			echo "Script successfully changed the server to $1"
-			echo "Public IP is: $IPCUR"
+			echo "Public IP is	: $IPCUR"
+			echo "Expected IP is	: $IP2BE"
 			exit 1
 		else
 			echo "Trying to get IP"
-			echo "Public IP is: $IPCUR"
+			echo "Public IP is	: $IPCUR"
+			echo "Expected IP is	: $IP2BE"
 		fi
 		sleep 3s
 	done
@@ -575,7 +577,7 @@ done
 if  [ "$IPCUR" != "$IP2BE" ]
 then
 	echo "IP could not be set correctly"
-	echo "Script failed to change the server to $1"
+	echo "Script failed to change the server to $SERVER"
 	echo "Public IP is: $IPCUR"
 	exit 1
 fi
