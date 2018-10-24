@@ -1,6 +1,7 @@
 #!/bin/bash
+
 AUTHOR="Ozan Kiratli"
-VERSION="O.2"
+VERSION="O.3"
 EMAIL="ozankiratli@protonmail.com"
 
 SCRIPTNAME=`basename "$0"`
@@ -39,6 +40,7 @@ function help {
 		echo "options:"
 		echo "-h, --help			Display help (this message)"
 		echo "-s <ServerName>			NordVPN server"
+		echo "-d <ServerName>			Downloads config files for a particular server"
 		echo "-p <PortType>			Port type TCP or UDP"
 		echo "-N /path/to/NordVPNfiles		Defines path to downloaded openvpn files"
 		echo "-C /path/to/openvpn		Path to OpenVPN configuration files in the system"
@@ -58,7 +60,7 @@ function help {
 		echo "--enable <VPNServiceName>		Enables service"
 		echo "--disable <VPNServiceName>	Disables service"
 		echo " "
-		echo "Be aware that -h, -l, --checkserver, -u, --updatefiles, --start, --stop, --restart, -status, --enable, and --disable options will override other options, the first of these options will be processed, the others will be ignored."
+		echo "Be aware that -h, -l, -d, --checkserver, -u, --updatefiles, --start, --stop, --restart, -status, --enable, and --disable options will override other options, the first of these options will be processed, the others will be ignored."
 		echo " "
 		echo "Default options are:"
 		echo "usage: $SCRIPTNAME -s <ServerName> [default=none] -p <PortType> [default=$PORT] -C <path/to/NordVPN> [default=$NORDPATH] -O <path/to/OpenVPN> [default=$OVPNPATH] -f <filename> [default=$VPNFILENAME]"
@@ -119,6 +121,32 @@ function runsysctl {
 	echo "Running: sudo systemctl $1 openvpn@$VPNNAME.service"
 	sudo systemctl $1 openvpn@$VPNNAME.service
 	echo "Done!"
+}
+
+function downloadfiles {
+	while true
+	do
+		echo "This process will try to download the config file"
+		read -p "Do you want to continue? [y/N]" yn
+		case $yn in
+			[Yy]* )
+				echo "Downloading files for server: $1"
+				echo " "
+				LINKUDP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.udp1194.ovpn"
+				LINKTCP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.tcp443.ovpn"
+				wget $LINKUDP -O $2/$1.nordvpn.com.udp1194.ovpn
+				wget $LINKTCP -O $2/$1.nordvpn.com.tcp443.ovpn
+				break
+				;;
+			N|n|"" )
+				echo "Exiting downloader"
+				break
+				;;
+			* )
+				echo "Please enter y or n"
+				;;
+		esac
+	done
 }
 
 function update {
@@ -342,6 +370,17 @@ case "$1" in
 		ls $NORDPATH/$SEARCHSTRING | sed -e 's/\// /g' | awk '{print $NF}' | sed -e 's/\./ /g' | awk '{print $1 " " $4}' | more
 		exit 1
 		;;
+	-d)
+		shift
+		if [ -z "$1" ]
+		then
+			echo "Servername is not specified"
+			echo "Try $SCRIPTNAME -h"
+			quit1
+		fi
+		downloadfiles $1 $NORDPATH
+		exit 1
+		;;
 	--checkserver)
 		shift
 		if [ -z "$1" ]
@@ -425,13 +464,19 @@ then
 		read -p "Wrong server name or missing server file. Do you want to update config files? [y/N]" yn
 		case $yn in
 			[Yy]* )
-			update $NORDPATH
+			downloadfiles $SERVER $NORDPATH
 			echo "Trying again!"
 				NEWFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
-				if [ -z "$SERVERFILE" ]
+				if [ -z "$NEWFILE" ]
 				then
-					echo "Still, wrong server name or missing server file!"
-					quit1
+					echo "Still, wrong server name or missing server file! Trying to update all files!"
+					update $NORDPATH
+					NEWFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
+					if [ -z "$NEWFILE" ]
+					then
+						echo "Still, wrong server name or missing server file! Trying to update all files!"
+						exit 1
+					fi
 				fi
 				break
 				;;
@@ -459,7 +504,7 @@ then
 	quit1
 fi
 
-IPATM=`wget -qO- http://ipecho.net/plain`
+IPATM=`wget -T 5 -t 1 -qO- https://api.ipify.org`
 echo "IP at the moment is: $IPATM"
 IP2BE=`grep "remote " $OVPNPATH/tmp.conf | awk '{print $2}'`
 echo "IP of destination VPN is: $IP2BE"
@@ -485,7 +530,7 @@ else
 fi
 
 echo "Checking IP settings..."
-IPCUR=`wget -qO- http://ipecho.net/plain`
+IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
 echo "Expected IP is	: $IP2BE"
 echo "Current IP is	: $IPCUR"
 
@@ -493,7 +538,7 @@ for i in {1..3}
 do
 	for j in {1..6}
 	do
-		IPCUR=`wget -qO- http://ipecho.net/plain`
+		IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
 		if  [ "$IPCUR" = "$IP2BE" ]
 		then
 			echo "IP settings are correct"
@@ -504,7 +549,7 @@ do
 		sleep 5s
 	done
 	echo "Restarting the VPN service... Trial $i"
-	sudo systemctl restart openvpn@NordUS.service
+	sudo systemctl restart openvpn@$VPNNAME.service
 done
 
 if  [ "$IPCUR" != "$IP2BE" ]
