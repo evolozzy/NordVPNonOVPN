@@ -134,8 +134,25 @@ function downloadfiles {
 				echo " "
 				LINKUDP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.udp1194.ovpn"
 				LINKTCP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.tcp443.ovpn"
-				wget $LINKUDP -O $2/$1.nordvpn.com.udp1194.ovpn
-				wget $LINKTCP -O $2/$1.nordvpn.com.tcp443.ovpn
+				wget --spider $LINKUDP -o tmp
+				EXISTS=`grep "Remote file exists" tmp
+				rm tmp
+				if [ -z "$EXISTS" ]
+				then
+					"The link for UDP config file does not exist"
+				else
+					wget $LINKUDP -O $2/$1.nordvpn.com.udp1194.ovpn
+				fi
+				wget --spider $LINKTCP -o tmp
+				EXISTS=`grep "Remote file exists" tmp
+				rm tmp
+				if [ -z "$EXISTS" ]
+				then
+					"The link for TCP config file does not exist"
+				else
+					wget $LINKTCP -O $2/$1.nordvpn.com.tcp443.ovpn
+				fi
+
 				break
 				;;
 			N|n|"" )
@@ -536,17 +553,20 @@ echo "Current IP is	: $IPCUR"
 
 for i in {1..3}
 do
-	for j in {1..6}
+	for j in {1..3}
 	do
-		IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
+		IPCUR=`wget -T 3 -t 1 -qO- https://api.ipify.org`
 		if  [ "$IPCUR" = "$IP2BE" ]
 		then
 			echo "IP settings are correct"
 			echo "Script successfully changed the server to $1"
 			echo "Public IP is: $IPCUR"
 			exit 1
+		else
+			echo "Trying to get IP"
+			echo "Public IP is: $IPCUR"
 		fi
-		sleep 5s
+		sleep 3s
 	done
 	echo "Restarting the VPN service... Trial $i"
 	sudo systemctl restart openvpn@$VPNNAME.service
@@ -559,4 +579,5 @@ then
 	echo "Public IP is: $IPCUR"
 	exit 1
 fi
+
 echo "Unknown error! OMG! This shouldn't be happening! Contact me at $EMAIL!"
