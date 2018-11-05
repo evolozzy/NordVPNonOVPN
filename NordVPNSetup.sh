@@ -1,7 +1,7 @@
 #!/bin/bash
 
 AUTHOR="Ozan Kiratli"
-VERSION="O.3"
+VERSION="0.9"
 EMAIL="ozankiratli@protonmail.com"
 
 SCRIPTNAME=`basename "$0"`
@@ -31,6 +31,50 @@ function checkopenvpn {
 		echo "OpenVPN is installed. $VOPN"
 	fi
 }
+
+function downloadfiles {
+	while true
+	do
+		echo "This process will try to download the config file"
+		read -p "Do you want to continue? [y/N]" yn
+		case $yn in
+			[Yy]* )
+				echo "Downloading files for server: $1"
+				echo " "
+				LINKUDP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.udp1194.ovpn"
+				LINKTCP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.tcp443.ovpn"
+				wget --spider $LINKUDP -o tmp
+				EXISTS=`grep "Remote file exists" tmp`
+				rm tmp
+				if [ -z "$EXISTS" ]
+				then
+					echo "The link for UDP config file does not exist"
+				else
+					wget $LINKUDP -O $2/$1.nordvpn.com.udp1194.ovpn
+				fi
+				wget --spider $LINKTCP -o tmp
+				EXISTS=`grep "Remote file exists" tmp`
+				rm tmp
+				if [ -z "$EXISTS" ]
+				then
+					echo "The link for TCP config file does not exist"
+				else
+					wget $LINKTCP -O $2/$1.nordvpn.com.tcp443.ovpn
+				fi
+
+				break
+				;;
+			N|n|"" )
+				echo "Exiting downloader"
+				break
+				;;
+			* )
+				echo "Please enter y or n"
+				;;
+		esac
+	done
+}
+
 
 function help {
 		echo "NordVPN client on OpenVPN easy setup script"
@@ -68,7 +112,7 @@ function help {
 
 function installopenvpn {
 	while true ; do
-		read -p "Do you want to install OpenVPN?" YesNo
+		read -p "Do you want to install OpenVPN? [y/N]" YesNo
 		case $YesNo in
 			[Yy]* )
 				sudo apt install openvpn
@@ -123,48 +167,96 @@ function runsysctl {
 	echo "Done!"
 }
 
-function downloadfiles {
-	while true
-	do
-		echo "This process will try to download the config file"
-		read -p "Do you want to continue? [y/N]" yn
-		case $yn in
-			[Yy]* )
-				echo "Downloading files for server: $1"
-				echo " "
-				LINKUDP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.udp1194.ovpn"
-				LINKTCP="https://downloads.nordcdn.com/configs/files/ovpn_legacy/servers/$1.nordvpn.com.tcp443.ovpn"
-				wget --spider $LINKUDP -o tmp
-				EXISTS=`grep "Remote file exists" tmp`
-				rm tmp
-				if [ -z "$EXISTS" ]
-				then
-					echo "The link for UDP config file does not exist"
-				else
-					wget $LINKUDP -O $2/$1.nordvpn.com.udp1194.ovpn
-				fi
-				wget --spider $LINKTCP -o tmp
-				EXISTS=`grep "Remote file exists" tmp`
-				rm tmp
-				if [ -z "$EXISTS" ]
-				then
-					echo "The link for TCP config file does not exist"
-				else
-					wget $LINKTCP -O $2/$1.nordvpn.com.tcp443.ovpn
-				fi
+function restartVPN {
+	OVPNPATH=$1
+	VPNNAME=$2
+	IPNOVPN=$3
+	IP2BE=`grep "remote " $OVPNPATH/$VPNNAME.conf | awk '{print $2}'`
+	echo "Checking IP settings..."
+	IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
+	echo "Expected IP is	: $IP2BE"
+	echo "Current IP is	: $IPCUR"
 
+	for i in {1..3}
+	do
+		echo "Checking the configuration of the VPN service... Trial $i"
+
+		echo "Restarting the VPN service..."
+		sudo systemctl start openvpn@$VPNNAME.service
+		echo "If no errors occurred, VPN service has been restarted!"
+
+		echo "Checking IP settings..."
+		IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
+
+
+		for j in {1..3}
+		do
+			IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
+			if  [ -z "$IPCUR" ]
+			then
+				echo "Warning: No IP is assigned at the moment!"
+				echo "Trying to get IP"
+				echo "Public IP is	: $IPCUR"
+				echo "Expected IP is	: $IP2BE"
+			elif  [ "$IPCUR" == "$IP2BE" ]
+			then
+				echo "IP settings are correct"
+				echo "Script successfully changed the server to $1"
+				echo "Public IP is	: $IPCUR"
+				echo "Expected IP is	: $IP2BE"
+				exit 1
+			elif [ "$IPCUR" == "$IPNOVPN" ]
+			then
+				echo "Warning: IP is still the IP without VPN, your internet is not currently masked!"
+				echo "Trying to get IP"
+				echo "Public IP is	: $IPCUR"
+				echo "Expected IP is	: $IP2BE"
+			else
 				break
-				;;
-			N|n|"" )
-				echo "Exiting downloader"
-				break
-				;;
-			* )
-				echo "Please enter y or n"
-				;;
-		esac
+			fi
+			echo "Waiting 15 seconds to try again..."
+			sleep 15s
+		done
+		echo "WARNING: Public IP: $IPCUR is not the same as Expected IP: $IP2BE"
+
+		if [ -z "$IPCUR" ]
+		then
+			echo "There is no IP at the moment!"
+		else
+			echo "Current IP is: $IPCUR"
+			while true
+			do
+				read -p "Do you want to keep the current IP? [y/N]  Warning: According to your IPTABLES configuration, you might lose internet connection!" YesNo
+				case $YesNo in
+					[Yy]* )
+						echo "Expected IP was: $IP2BE"
+						echo "Your IP has been changed to: $IPCUR"
+						echo "Exiting script!"
+						exit 1
+						;;
+					N|n|"")
+						echo "This will try to restart the VPN service and try again"
+						break
+						;;
+					*)
+						echo "Select y or n"
+						;;
+				esac
+			done
+		fi
+		if [ $i == 3 ]
+		then
+			break
+		else
+			echo "Stopping the VPN service..."
+			sudo systemctl stop openvpn@$VPNNAME.service
+			echo "Done!"
+		fi
 	done
+
+
 }
+
 
 function update {
 	while true
@@ -434,7 +526,14 @@ case "$1" in
 		;;
 	--restart)
 		shift
-		runsysctl restart $1
+		echo "Stopping VPN service..."
+		runsysctl stop $1
+		echo "Done!"
+		sleep 2s
+		IPNOVPN=`wget -T 5 -t 1 -qO- https://api.ipify.org`
+		echo "IP without VPN is: $IPNOVPN"
+		sleep 1s
+		restartVPN $OVPNPATH $VPNNAME $IPNOVPN
 		exit 1
 		;;
 	--status)
@@ -521,10 +620,20 @@ then
 	quit1
 fi
 
+
+
 IPATM=`wget -T 5 -t 1 -qO- https://api.ipify.org`
 echo "IP at the moment is: $IPATM"
 IP2BE=`grep "remote " $OVPNPATH/tmp.conf | awk '{print $2}'`
 echo "IP of destination VPN is: $IP2BE"
+
+echo "Stopping VPN service..."
+sudo systemctl stop openvpn@$VPNNAME.service
+echo "Done!"
+sleep 2s
+IPNOVPN=`wget -T 5 -t 1 -qO- https://api.ipify.org`
+echo "IP without VPN is: $IPNOVPN"
+sleep 2s
 
 if [ $FIRSTUSE == 1 ] ; then
 	sudo mv $OVPNPATH/tmp.conf $OVPNPATH/$VPNFILE
@@ -540,40 +649,16 @@ elif [ "$IPATM" = "$IP2BE" ] ; then
 	echo "Current IP: $IPATM"
 	exit 1
 else
-	echo "Replacing configuration file and restarting the VPN service at $IP2BE"
+	echo "Replacing configuration file with the new file..."
 	sudo mv $OVPNPATH/tmp.conf $OVPNPATH/$VPNFILE
-	sudo systemctl restart openvpn@$VPNNAME.service
-	echo "VPN service has been restarted!"
+	echo "Done!"
+	sleep 1s
 fi
 
-echo "Checking IP settings..."
+
+restartVPN $OVPNPATH $VPNNAME $IPNOVPN
+
 IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
-echo "Expected IP is	: $IP2BE"
-echo "Current IP is	: $IPCUR"
-
-for i in {1..3}
-do
-	for j in {1..3}
-	do
-		IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
-		if  [ "$IPCUR" == "$IP2BE" ]
-		then
-			echo "IP settings are correct"
-			echo "Script successfully changed the server to $1"
-			echo "Public IP is	: $IPCUR"
-			echo "Expected IP is	: $IP2BE"
-			exit 1
-		else
-			echo "Trying to get IP"
-			echo "Public IP is	: $IPCUR"
-			echo "Expected IP is	: $IP2BE"
-		fi
-		sleep 3s
-	done
-	echo "Restarting the VPN service... Trial $i"
-	sudo systemctl restart openvpn@$VPNNAME.service
-done
-
 if  [ "$IPCUR" != "$IP2BE" ]
 then
 	echo "IP could not be set correctly"
