@@ -33,8 +33,7 @@ function checkopenvpn {
 }
 
 function downloadfiles {
-	while true
-	do
+	while true ; do
 		echo "This process will try to download the config file"
 		read -p "Do you want to continue? [y/N]" yn
 		case $yn in
@@ -46,8 +45,7 @@ function downloadfiles {
 				wget --spider $LINKUDP -o tmp
 				EXISTS=`grep "Remote file exists" tmp`
 				rm tmp
-				if [ -z "$EXISTS" ]
-				then
+				if [ -z "$EXISTS" ] ; then
 					echo "The link for UDP config file does not exist"
 				else
 					wget $LINKUDP -O $2/$1.nordvpn.com.udp1194.ovpn
@@ -55,13 +53,11 @@ function downloadfiles {
 				wget --spider $LINKTCP -o tmp
 				EXISTS=`grep "Remote file exists" tmp`
 				rm tmp
-				if [ -z "$EXISTS" ]
-				then
+				if [ -z "$EXISTS" ] ; then
 					echo "The link for TCP config file does not exist"
 				else
 					wget $LINKTCP -O $2/$1.nordvpn.com.tcp443.ovpn
 				fi
-
 				break
 				;;
 			N|n|"" )
@@ -74,7 +70,6 @@ function downloadfiles {
 		esac
 	done
 }
-
 
 function help {
 		echo "NordVPN client on OpenVPN easy setup script"
@@ -146,7 +141,6 @@ function maketitle {
 	echo " "
 }
 
-
 function quit1 {
 	echo "For Correct Usage, Try: $SCRIPTNAME -u"
 	echo "For Help, Try: $SCRIPTNAME -h"
@@ -177,36 +171,28 @@ function restartVPN {
 	echo "Expected IP is	: $IP2BE"
 	echo "Current IP is	: $IPCUR"
 
-	for i in {1..3}
-	do
+	for i in {1..3} ; do
 		echo "Checking the configuration of the VPN service... Trial $i"
-
 		echo "Restarting the VPN service..."
 		sudo systemctl start openvpn@$VPNNAME.service
 		echo "If no errors occurred, VPN service has been restarted!"
-
 		echo "Checking IP settings..."
 		IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
 
-
-		for j in {1..3}
-		do
+		for j in {1..3} ; do
 			IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
-			if  [ -z "$IPCUR" ]
-			then
+			if  [ -z "$IPCUR" ] ; then
 				echo "Warning: No IP is assigned at the moment!"
 				echo "Trying to get IP"
 				echo "Public IP is	: $IPCUR"
 				echo "Expected IP is	: $IP2BE"
-			elif  [ "$IPCUR" == "$IP2BE" ]
-			then
+			elif  [ "$IPCUR" == "$IP2BE" ] ; then
 				echo "IP settings are correct"
 				echo "Script successfully changed the server to $1"
 				echo "Public IP is	: $IPCUR"
 				echo "Expected IP is	: $IP2BE"
 				exit 1
-			elif [ "$IPCUR" == "$IPNOVPN" ]
-			then
+			elif [ "$IPCUR" == "$IPNOVPN" ] ; then
 				echo "Warning: IP is still the IP without VPN, your internet is not currently masked!"
 				echo "Trying to get IP"
 				echo "Public IP is	: $IPCUR"
@@ -219,13 +205,11 @@ function restartVPN {
 		done
 		echo "WARNING: Public IP: $IPCUR is not the same as Expected IP: $IP2BE"
 
-		if [ -z "$IPCUR" ]
-		then
+		if [ -z "$IPCUR" ] ; then
 			echo "There is no IP at the moment!"
 		else
 			echo "Current IP is: $IPCUR"
-			while true
-			do
+			while true ; do
 				read -p "Do you want to keep the current IP? [y/N]  Warning: According to your IPTABLES configuration, you might lose internet connection!" YesNo
 				case $YesNo in
 					[Yy]* )
@@ -244,8 +228,7 @@ function restartVPN {
 				esac
 			done
 		fi
-		if [ $i == 3 ]
-		then
+		if [ $i == 3 ] ; then
 			break
 		else
 			echo "Stopping the VPN service..."
@@ -253,14 +236,10 @@ function restartVPN {
 			echo "Done!"
 		fi
 	done
-
-
 }
 
-
 function update {
-	while true
-	do
+	while true ; do
 		echo "This process will first backup all files in $1/backup, then overwrite all the configuration files in $1."
 		read -p "Do you want to update config files? [y/N]" yn
 		case $yn in
@@ -337,7 +316,7 @@ case "$1" in
 	-s)
 		shift
 		if test $# -gt 0; then
-			checkflags $1
+			checkflag $1
 			SERVER=$1
 		else
 			echo "No server specified!"
@@ -348,7 +327,7 @@ case "$1" in
 	-p)
 		shift
 		if test $# -gt 0; then
-			checkflags $1
+			checkflag $1
 			PT1="$1"
 			PT=`echo "$PT1" | awk '{print tolower($0)}'`
 			if [ "$PT" = "tcp" ] || [ "$PT" = "udp" ] ; then
@@ -367,7 +346,7 @@ case "$1" in
 		shift
 		if test $# -gt 0; then
 			PATH1=`ls -ld $1 | awk '{print $9}'`
-			checkflags $1
+			checkflag $1
 			if [ -z "$PATH1" ] ; then
 				echo "Wrong PATH for OpenVPN configuration files!"
 				quit1
@@ -384,7 +363,7 @@ case "$1" in
 		shift
 		if test $# -gt 0; then
 			PATH2=`ls -ld $1 | awk '{print $9}'`
-			checkflags $1
+			checkflag $1
 			if [ -z "$PATH2" ] ; then
 				echo "Wrong PATH for NordVPN configuration files!"
 				quit1
@@ -400,7 +379,7 @@ case "$1" in
 	-f)
 		shift
 		if test $# -gt 0; then
-			checkflags $1
+			checkflag $1
 			VPNNAME=$1
 		else
 			echo "No filename specified!"
@@ -432,7 +411,7 @@ case "$1" in
 				--country)
 					shift
 					if test $# -gt 0; then
-						checkflags $1
+						checkflag $1
 						CC="$1"
 						CCD=`echo "$CC" | awk '{print tolower($0)}'`
 						if [ ${#CCD} != 2 ] ; then
@@ -450,13 +429,12 @@ case "$1" in
 					;;
 				--port)
 					shift
-					if [ -z "$1" ]
-					then
+					if [ -z "$1" ] ; then
 						echo "Port type is not specified"
 						echo "Try $SCRIPTNAME -h -l"
 						quit1
 					fi
-					checkflags $1
+					checkflag $1
 					PRPT="$1"
 					PRT=`echo "$PRPT" | awk '{print tolower($0)}'`
 					if [ "$PRT" = "tcp" ] || [ "$PRT" = "udp" ] ; then
@@ -481,8 +459,7 @@ case "$1" in
 		;;
 	-d)
 		shift
-		if [ -z "$1" ]
-		then
+		if [ -z "$1" ] ; then
 			echo "Servername is not specified"
 			echo "Try $SCRIPTNAME -h"
 			quit1
@@ -492,13 +469,12 @@ case "$1" in
 		;;
 	--checkserver)
 		shift
-		if [ -z "$1" ]
-		then
+		if [ -z "$1" ] ; then
 			echo "Server name is not specified"
 			echo "Try $SCRIPTNAME -h"
 			quit1
 		fi
-		checkflags $1
+		checkflag $1
 		SVN="$1"
 		SVNM=`echo "$SVN" | awk '{print tolower($0)}'`
 		SEARCHSTRING=$SVNM"*"
@@ -573,23 +549,19 @@ SERVERFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
 echo "Login: $LOGINFILE"
 echo "Server: $SERVERFILE"
 
-if [ -z "$SERVERFILE" ]
-then
-	while true
-	do
+if [ -z "$SERVERFILE" ] ; then
+	while true ; do
 		read -p "Wrong server name or missing server file. Do you want to update config files? [y/N]" yn
 		case $yn in
 			[Yy]* )
 			downloadfiles $SERVER $NORDPATH
 			echo "Trying again!"
 				SERVERFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
-				if [ -z "$SERVERFILE" ]
-				then
+				if [ -z "$SERVERFILE" ] ; then
 					echo "Still, wrong server name or missing server file! Trying to update all files!"
 					update $NORDPATH
 					SERVERFILE=`ls $NORDPATH/$SERVER.*.$PORT*`
-					if [ -z "$SERVERFILE" ]
-					then
+					if [ -z "$SERVERFILE" ] ; then
 						echo "Still, wrong server name or missing server file! Trying to update all files!"
 						exit 1
 					fi
@@ -614,13 +586,10 @@ sudo cp $SERVERFILE $OVPNPATH/tmp.conf
 sudo sed -i "/auth-user-pass/c\auth-user-pass $OVPNPATH/$LOGINFILE" $OVPNPATH/tmp.conf
 
 NULL=`grep -E "$LOGINFILE" $OVPNPATH/tmp.conf`
-if [ -z "$NULL" ]
-then
+if [ -z "$NULL" ] ; then
 	echo "Unsuccessful attempt to add login info"
 	quit1
 fi
-
-
 
 IPATM=`wget -T 5 -t 1 -qO- https://api.ipify.org`
 echo "IP at the moment is: $IPATM"
@@ -655,12 +624,10 @@ else
 	sleep 1s
 fi
 
-
 restartVPN $OVPNPATH $VPNNAME $IPNOVPN
 
 IPCUR=`wget -T 5 -t 1 -qO- https://api.ipify.org`
-if  [ "$IPCUR" != "$IP2BE" ]
-then
+if  [ "$IPCUR" != "$IP2BE" ] ; then
 	echo "IP could not be set correctly"
 	echo "Script failed to change the server to $SERVER"
 	echo "Public IP is: $IPCUR"
