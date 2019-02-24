@@ -350,7 +350,7 @@ case "$1" in
 		if test $# -gt 0; then
 			checkflags $1
 			PT1="$1"
-			PT=`echo "$PT1" | awk '{print tolower($0)}`
+			PT=`echo "$PT1" | awk '{print tolower($0)}'`
 			if [ "$PT" = "tcp" ] || [ "$PT" = "udp" ] ; then
 				PORT=$PT
 			else
