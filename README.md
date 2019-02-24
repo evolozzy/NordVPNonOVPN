@@ -49,7 +49,7 @@ NordVPNSetup.sh -s <ServerName> [default=none] -p <PortType> [default=udp] -C <p
 ### Setting NordVPN:
 ```
 NordVPNSetup.sh -s <ServerName> [default=none] -p <PortType> [default=udp] -C <path/to/NordVPN> [default=/home/romulan/build/nordvpn] -O <path/to/OpenVPN> [default=/etc/openvpn] -f <filename> [default=]
- ```
+```
 
 ### For Help:
 ```
